@@ -128,6 +128,12 @@
             "ref": "421933bf8f0e75546ac8e00cb3eb12904fa2ac1a"
         }
     },
+    "stepandalecky/kml-parser": {
+        "version": "v0.1.1"
+    },
+    "stepandalecky/xml-element": {
+        "version": "v0.1.1"
+    },
     "swiftmailer/swiftmailer": {
         "version": "v6.1.0"
     },
