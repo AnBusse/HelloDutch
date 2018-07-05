@@ -18,7 +18,7 @@
         <ul>
             {% for result in resultset %}
             <li>
-                <a href="single.html.twig#{{ result.id }}">result.title</a>
+                <a href="{{ path('singleRecipe') }}/{{ result.id }}">result.title</a>
             </li>
             {% endfor %}
         </ul>
