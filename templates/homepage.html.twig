@@ -8,8 +8,13 @@
     </style>
 {% endblock %}
 {% block home_content %}
+
+    {% set result = 'result' %}
+    {{ include ('single.html.twig') }}
+
     <h1>Welcome!</h1>
 
+    {%  if is_granted('ROLE_USER') %}
     <div>
         <div id="map"></div>
     </div>
@@ -21,11 +26,9 @@
                 zoom: 6.8
             });
 
-            // Create a <script> tag and set the USGS URL as the source.
             var script = document.createElement('script');
-            map.data.loadGeoJson('/geodata/provinces.geojson');
+            var mapdata = map.data.loadGeoJson('/geodata/provinces.geojson');
 
-            // Set the global styles.
             map.data.setStyle({
                 strokeWeight: 2,
                 clickable: true
@@ -39,41 +42,51 @@
                         lng: event.latLng.lng()
                     };
 
-                infoWindow = new google.maps.InfoWindow;
+                    lati = pos.lat;
+                    longi = pos.lng;
 
+                $.ajax({
+                    url: 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lati + ',' + longi + '&key=AIzaSyDz1jPdAPhKnEgWFqYMt9x55-gA1l0yBcA',
+                    dataType: 'application/json',
+                    complete: function (data) {
+                        console.log(data)
+                    },
+                    success: function (data) {
+                        var area = data.results[0].address_components[5].long_name;
+                        //Based on Example: http://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&sensor=true
 
-                    infoWindow.setPosition(pos);
-                    infoWindow.setContent('Location found.');
-                    infoWindow.open(map);
-                    map.setCenter(pos);
+                        //Pass area data to PHP via AJAX
+                        $.ajax({
+                            type: 'POST',
+                            url: '/form-processor',
+                            data: {'area': area},
+                        });
+                    }
+                });
 
             });
-
-              //  console.log(pos);
 
                 map.data.addListener('rightclick', function(event) {
                 map.data.overrideStyle(event.feature, {fillColor: 'none'});
                 map.data.removeProperty();
             });
 
-            window.eqfeed_callback = function (results) {
-                for (var i = 0; i < results.features.length; i++) {
-                    var coords = results.features[i].geometry.coordinates;
-                    var latLng = new google.maps.LatLng(coords[1], coords[0]);
-                    var marker = new google.maps.Marker({
-                        position: latLng,
-                        map: map
-                    });
-                }
-
-            }
         }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDz1jPdAPhKnEgWFqYMt9x55-gA1l0yBcA&callback=initMap"
             async defer></script>
-    {%  if is_granted('ROLE_USER') %}
 
-        {# do stuff #}
+        {{ form_start(form) }}
+        {{ form_errors(form) }}
+        {{ form_label(form.recipe, 'Search for Recipe') }}
+        {{ form_row(form.recipe) }}
+
+        {{ form_label(form.category, 'Search by Category') }}
+        {{ form_row(form.category) }}
+
+        {{ form_label(form.province, 'Search by Province of origin') }}
+        {{ form_row(form.province) }}
+        {{ form_end(form) }}
 
     {% else %}
         <p>Please <a href="{{ path('fos_user_security_login') }}">Login</a>

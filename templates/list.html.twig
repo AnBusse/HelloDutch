@@ -1,0 +1,32 @@
+{% extends "base.html.twig" %}
+
+{% block title %}HelloDutch{% endblock %}
+{% block head %}
+    {{ parent() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block home_content %}
+    <h1>Welcome!</h1>
+
+    {%  if is_granted('ROLE_USER') %}
+        <h3>Search Results</h3>
+        <p>
+            Your search resulted in the following hits:
+        </p>
+        <ul>
+            {% for result in resultset %}
+            <li>
+                <a href="single.html.twig#{{ result.id }}">result.title</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+    {% else %}
+        <p>Please <a href="{{ path('fos_user_security_login') }}">Login</a>
+            or <a href="{{ path('fos_user_registration_register') }}">Register</a>
+            to proceed.
+        </p>
+    {% endif %}
+{% endblock %}

@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Category;
+use App\Entity\Form\SearchFormType;
+use App\Entity\Province;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
@@ -21,31 +24,45 @@ class HomepageController extends AbstractController
      */
     public function indexAction(Request $request){
 
-     //   $form = $this->createForm(ConverterFormType::class);
+        $em = $this->getDoctrine()->getManager();
 
-        $parser = Parser::fromFile('geodata/provinces.kml');
-        $kml = $parser->getKml();
+        $categories = $this->getDoctrine()
+            ->getRepository(Category::class)
+            ->findAll();
 
-       // $form->handleRequest($request);
-        /*
+        $provinces = $this->getDoctrine()
+            ->getRepository(Province::class)
+            ->findAll();
+
+        $form = $this->createForm(SearchFormType::class);
+        $formview = $form->createView();
+
+        $form->handleRequest($request);
+
         if ($form->isSubmitted() && $form->isValid()) {
             $formData = $form->getData();
 
-            $currencyValuesObj = new CurrencyController();
-            $returnValue = $currencyValuesObj->convertAction($FromCurrency, $ToCurrency,$userInputValue);
+            $qb = $em->createQueryBuilder();
+            $qb->select('recipe.title')
+                ->from('Recipes', 'u')
+                ->where('recipes.description =in (:description)')
+                ->andWhere("category.id in (:categories)")
+                ->andWhere("provinces.id in (:provinces)")
+                ->orderBy('provinces.id', 'ASC')
+                ->setParameter("categories", $formData['data']['description'])
+                ->setParameter("categories", $formData['data']['category'])
+                ->setParameter("provinces",  $formData['data']['provinces']);
+            ;
 
-            return $this->render('homepage.html.twig', array(
-                'calcValue' => $returnValue['result'],
-                'userInputValue' => $userInputValue,
-                'currencyFrom' => $FromCurrency,
-                'currencyTo' => $ToCurrency
+            $query = $qb->getQuery();
+            $result = $query->getResult();
+
+            return $this->render('list.html.twig', array(
+                'resultset' => $result,
             ));
         }
-        */
-    //    $response = new Response($this->render('sitemap.xml.twig'));
-   //     $response->headers->set('Content-Type', 'application/xml; charset=utf-8');
-   //     return $response;
-        return $this->render('homepage.html.twig', array('kmldata' => $kml)
+
+        return $this->render('homepage.html.twig', array('form' => $formview)
         );
     }
 }
